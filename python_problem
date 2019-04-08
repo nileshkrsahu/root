@@ -1,1 +1,56 @@
 
+"""
+Created on Mon Apr  8 20:51:48 2019
+
+@author: neil
+"""
+import tweepy #Importing tweepy package for using twitter API
+import json #Importing json package for using different json methods
+from tweepy import OAuthHandler
+ 
+
+#Consumer_key,consumer_secret,access_token and access_secret are provided by twitter for developer
+consumer_key = 'XXXXXXXXXXXXXXXXXXX'
+consumer_secret = 'XXXXXXXXXXXXXXXXXXXXXXXXXX'
+access_token = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+access_secret = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+
+ 
+auth = OAuthHandler(consumer_key, consumer_secret) # Authorisation method for verifying consumer_key and consumer_secret
+auth.set_access_token(access_token, access_secret) # Authorisation method for verifying acess_key and access_secret
+
+api = tweepy.API(auth)
+    
+
+with open('midas.json', 'w') as f: # Storing each tweets in file called midas.json
+    for tweet in tweepy.Cursor(api.user_timeline, id="midasIIITD").items(350):
+        str=json.dumps(tweet._json) # It will dump each tweets in midas.json file
+        f.write(str)
+        f.write('\n')
+
+#parsing the midas.json file to first store the every tweets in xls file in tabular format and then display them
+from xlwt import Workbook   
+wb = Workbook()
+sheet1 = wb.add_sheet('Sheet 1') 
+sheet1.write(0,0,'Text')
+sheet1.write(0,1,'Date & Time')
+sheet1.write(0,2,'No. of Likes')
+sheet1.write(0,3,'No. of retweet')
+
+with open('midas.json', 'r') as f:
+    i=1
+    for line in f:
+        tweet = json.loads(line.strip())
+        if 'text' in tweet:
+            sheet1.write(i, 0, tweet['text']) 
+            sheet1.write(i, 1, tweet['created_at']) 
+            sheet1.write(i, 2, tweet['favorite_count']) 
+            sheet1.write(i, 3, tweet['retweet_count'])
+        i=i+1
+
+
+wb.save('tweet.xls') 
+#Displaying the result stored in tweet.xls file done in previous step
+import pandas
+df = pandas.read_excel('tweet.xls')
+print(df)
