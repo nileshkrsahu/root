@@ -1,1 +1,69 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Apr  9 13:43:13 2019
 
+@author: neil
+"""
+
+import pickle
+
+#Importing_Dataset
+with open('train_image.pkl', 'rb') as f:
+    X= pickle.load(f)
+
+with open('train_label.pkl', 'rb') as f:
+    y= pickle.load(f)
+    
+with open('test_image.pkl', 'rb') as f:
+    z= pickle.load(f)
+    
+# Splitting the dataset into the Training set and Test set
+from sklearn.cross_validation import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 0)
+
+# Feature Scaling
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+z=sc.fit_transform(z)
+X_test = sc.transform(X_test)
+
+# Fitting Kernel SVM classifier to the Training set
+from sklearn.svm import SVC
+classifier=SVC(kernel='rbf',random_state=0)
+classifier.fit(X_train,y_train)
+
+# Predicting the Test set results
+y_pred = classifier.predict(X_test)
+
+# Making the Confusion Matrix
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, y_pred)
+
+# Predicting class label for the test image
+z_pred=classifier.predict(z)
+
+# Storing the identified class in class_lablel.xls file
+from xlwt import Workbook     
+wb = Workbook()
+sheet1 = wb.add_sheet('Sheet 1') 
+sheet1.write(0,0,'image_index')
+sheet1.write(0,1,'class')
+
+k=0
+i=1
+for j in range(2000):
+    temp1=k
+    temp2=int(z_pred[k])
+    sheet1.write(i, 0, temp1) 
+    sheet1.write(i, 1, temp2)
+    i=i+1
+    k=k+1
+
+
+wb.save('class_label.xls') 
+   
+# And then storing the final result in Nilesh_Kumar_Sahu.csv
+import pandas as pd
+data_xls = pd.read_excel('class_label.xls',index_col=0)
+data_xls.to_csv('Nilesh_Kumar_Sahu.csv', encoding='utf-8')
